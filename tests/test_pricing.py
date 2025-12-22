@@ -26,7 +26,7 @@ class TestPricingEngine:
             prompt_tokens=1000,
             completion_tokens=500,
         )
-        
+
         assert isinstance(cost, Decimal)
         assert cost > 0
 
@@ -37,7 +37,7 @@ class TestPricingEngine:
             prompt_tokens=1000,
             completion_tokens=500,
         )
-        
+
         assert isinstance(cost, Decimal)
         assert cost > 0
 
@@ -48,7 +48,7 @@ class TestPricingEngine:
             prompt_tokens=1000,
             completion_tokens=500,
         )
-        
+
         assert isinstance(cost, Decimal)
         assert cost > 0
 
@@ -60,7 +60,7 @@ class TestPricingEngine:
             prompt_tokens=1000,
             completion_tokens=500,
         )
-        
+
         assert isinstance(cost, Decimal)
         assert cost > 0
 
@@ -72,7 +72,7 @@ class TestPricingEngine:
             prompt_tokens=0,
             completion_tokens=0,
         )
-        
+
         assert cost == Decimal("0")
 
     def test_get_model_pricing(self, engine: PricingEngine):
@@ -81,7 +81,7 @@ class TestPricingEngine:
             provider="azure_openai",
             model="gpt-4o",
         )
-        
+
         assert isinstance(input_price, Decimal)
         assert isinstance(output_price, Decimal)
         assert input_price > 0
@@ -92,7 +92,7 @@ class TestPricingEngine:
         # These should all work
         cost1 = engine.calculate_cost("bedrock", "test", 100, 50)
         cost2 = engine.calculate_cost("aws_bedrock", "test", 100, 50)
-        
+
         # Both should return valid costs
         assert cost1 > 0
         assert cost2 > 0
@@ -100,7 +100,7 @@ class TestPricingEngine:
     def test_get_provider_models(self, engine: PricingEngine):
         """Test getting all models for a provider."""
         models = engine.get_provider_models("bedrock")
-        
+
         assert isinstance(models, list)
         # Should have some models
         if models:

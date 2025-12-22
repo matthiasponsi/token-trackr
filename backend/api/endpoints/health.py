@@ -16,14 +16,14 @@ router = APIRouter()
 
 class HealthResponse(BaseModel):
     """Health check response."""
-    
+
     status: str
     version: str
 
 
 class ReadinessResponse(BaseModel):
     """Readiness check response."""
-    
+
     status: str
     database: str
     version: str

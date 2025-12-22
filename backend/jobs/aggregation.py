@@ -6,12 +6,10 @@ Daily and monthly token usage aggregation jobs.
 
 from datetime import date, timedelta
 from decimal import Decimal
-from typing import Optional
 
-from sqlalchemy import delete, func, insert, select
-from sqlalchemy.dialects.postgresql import insert as pg_insert
-from sqlalchemy.ext.asyncio import AsyncSession
 import structlog
+from sqlalchemy import func, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from backend.database import get_session_context
 from backend.models.usage import (
@@ -26,17 +24,17 @@ logger = structlog.get_logger()
 class DailyAggregationJob:
     """
     Aggregate raw token usage into daily summaries.
-    
+
     Runs daily to pre-compute usage statistics for fast dashboard queries.
     """
 
-    async def run(self, target_date: Optional[date] = None) -> int:
+    async def run(self, target_date: date | None = None) -> int:
         """
         Run daily aggregation for a specific date.
-        
+
         Args:
             target_date: Date to aggregate (defaults to yesterday)
-            
+
         Returns:
             Number of summary records created/updated
         """
@@ -113,12 +111,12 @@ class DailyAggregationJob:
         """
         total = 0
         current = start_date
-        
+
         while current <= end_date:
             count = await self.run(current)
             total += count
             current += timedelta(days=1)
-        
+
         logger.info("Backfill completed", start=str(start_date), end=str(end_date), total=total)
         return total
 
@@ -126,22 +124,22 @@ class DailyAggregationJob:
 class MonthlyAggregationJob:
     """
     Aggregate daily summaries into monthly summaries.
-    
+
     Runs monthly to compute billing totals.
     """
 
     async def run(
         self,
-        year: Optional[int] = None,
-        month: Optional[int] = None,
+        year: int | None = None,
+        month: int | None = None,
     ) -> int:
         """
         Run monthly aggregation.
-        
+
         Args:
             year: Year to aggregate (defaults to previous month)
             month: Month to aggregate (defaults to previous month)
-            
+
         Returns:
             Number of summary records created/updated
         """

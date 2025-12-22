@@ -5,11 +5,11 @@ API endpoints for tenant usage reports and summaries.
 """
 
 from datetime import date
-from typing import Annotated, Optional
+from typing import Annotated
 
+import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
-import structlog
 
 from backend.database import get_session
 from backend.schemas.usage import (
@@ -35,7 +35,7 @@ async def get_tenant_summary(
 ) -> TenantSummaryResponse:
     """
     Get overall usage summary for a tenant.
-    
+
     Returns:
     - Total requests, tokens, and cost
     - First and last usage timestamps
@@ -49,7 +49,7 @@ async def get_tenant_summary(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve tenant summary",
-        )
+        ) from e
 
 
 @router.get(
@@ -61,12 +61,12 @@ async def get_tenant_summary(
 async def get_daily_summary(
     tenant_id: str,
     session: Annotated[AsyncSession, Depends(get_session)],
-    start_date: Annotated[Optional[date], Query(description="Start date (YYYY-MM-DD)")] = None,
-    end_date: Annotated[Optional[date], Query(description="End date (YYYY-MM-DD)")] = None,
+    start_date: Annotated[date | None, Query(description="Start date (YYYY-MM-DD)")] = None,
+    end_date: Annotated[date | None, Query(description="End date (YYYY-MM-DD)")] = None,
 ) -> DailySummaryResponse:
     """
     Get daily usage summary for a tenant.
-    
+
     Defaults to last 30 days if no date range specified.
     """
     try:
@@ -77,7 +77,7 @@ async def get_daily_summary(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve daily summary",
-        )
+        ) from e
 
 
 @router.get(
@@ -89,12 +89,12 @@ async def get_daily_summary(
 async def get_monthly_summary(
     tenant_id: str,
     session: Annotated[AsyncSession, Depends(get_session)],
-    year: Annotated[Optional[int], Query(description="Filter by year", ge=2020, le=2100)] = None,
-    month: Annotated[Optional[int], Query(description="Filter by month", ge=1, le=12)] = None,
+    year: Annotated[int | None, Query(description="Filter by year", ge=2020, le=2100)] = None,
+    month: Annotated[int | None, Query(description="Filter by month", ge=1, le=12)] = None,
 ) -> MonthlySummaryResponse:
     """
     Get monthly usage summary for a tenant.
-    
+
     Optionally filter by year and/or month.
     """
     try:
@@ -105,5 +105,5 @@ async def get_monthly_summary(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve monthly summary",
-        )
+        ) from e
 

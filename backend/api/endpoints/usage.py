@@ -6,9 +6,9 @@ API endpoints for recording token usage events.
 
 from typing import Annotated
 
+import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-import structlog
 
 from backend.database import get_session
 from backend.schemas.usage import UsageEvent, UsageEventResponse
@@ -31,7 +31,7 @@ async def record_usage(
 ) -> UsageEventResponse:
     """
     Record a token usage event.
-    
+
     This endpoint receives usage data from the SDK and:
     - Validates the event data
     - Auto-detects the source (K8s, EC2, GCE, Azure VM)
@@ -41,7 +41,7 @@ async def record_usage(
     try:
         service = UsageService(session)
         usage = await service.record_usage(event)
-        
+
         return UsageEventResponse(
             id=usage.id,
             tenant_id=usage.tenant_id,
@@ -56,13 +56,13 @@ async def record_usage(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from e
     except Exception as e:
         logger.error("Failed to record usage", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to record usage event",
-        )
+        ) from e
 
 
 @router.post(
@@ -78,7 +78,7 @@ async def record_usage_batch(
 ) -> list[UsageEventResponse]:
     """
     Record multiple token usage events in batch.
-    
+
     Useful for SDKs that queue events locally and send them periodically.
     """
     if len(events) > 1000:

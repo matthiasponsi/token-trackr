@@ -5,14 +5,11 @@ Generate CSV billing reports for tenants.
 """
 
 import csv
-from datetime import date, datetime
-from io import StringIO
+from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 import structlog
+from sqlalchemy import select
 
 from backend.database import get_session_context
 from backend.models.usage import TenantMonthlySummary
@@ -33,16 +30,16 @@ class BillingReportJob:
         self,
         year: int,
         month: int,
-        tenant_id: Optional[str] = None,
+        tenant_id: str | None = None,
     ) -> Path:
         """
         Generate monthly billing report.
-        
+
         Args:
             year: Report year
             month: Report month
             tenant_id: Optional specific tenant (all if None)
-            
+
         Returns:
             Path to generated CSV file
         """
@@ -83,7 +80,7 @@ class BillingReportJob:
             # Write CSV
             with open(output_path, "w", newline="") as f:
                 writer = csv.writer(f)
-                
+
                 # Header
                 writer.writerow([
                     "Tenant ID",
@@ -118,7 +115,7 @@ class BillingReportJob:
                     total_requests = sum(r.total_requests for r in rows)
                     total_tokens = sum(r.total_tokens for r in rows)
                     total_cost = sum(r.total_cost for r in rows)
-                    
+
                     writer.writerow([])
                     writer.writerow([
                         "TOTAL",
@@ -165,12 +162,12 @@ class BillingReportJob:
             # Filter by date range
             stmt = stmt.where(
                 (TenantMonthlySummary.year > start_year) |
-                ((TenantMonthlySummary.year == start_year) & 
+                ((TenantMonthlySummary.year == start_year) &
                  (TenantMonthlySummary.month >= start_month))
             )
             stmt = stmt.where(
                 (TenantMonthlySummary.year < end_year) |
-                ((TenantMonthlySummary.year == end_year) & 
+                ((TenantMonthlySummary.year == end_year) &
                  (TenantMonthlySummary.month <= end_month))
             )
 
@@ -191,7 +188,7 @@ class BillingReportJob:
             # Write CSV
             with open(output_path, "w", newline="") as f:
                 writer = csv.writer(f)
-                
+
                 writer.writerow([
                     "Year",
                     "Month",

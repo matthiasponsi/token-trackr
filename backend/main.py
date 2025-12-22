@@ -4,13 +4,13 @@ Token Trackr Backend
 FastAPI application entry point.
 """
 
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
+import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_client import make_asgi_app
-import structlog
 
 from backend.api import api_router
 from backend.config import settings
@@ -45,9 +45,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("Starting Token Trackr", env=settings.app_env)
     await init_db()
     logger.info("Database connected")
-    
+
     yield
-    
+
     # Shutdown
     logger.info("Shutting down Token Trackr")
     await close_db()
@@ -85,7 +85,7 @@ app.include_router(api_router)
 def run() -> None:
     """Run the application with uvicorn."""
     import uvicorn
-    
+
     uvicorn.run(
         "backend.main:app",
         host=settings.app_host,

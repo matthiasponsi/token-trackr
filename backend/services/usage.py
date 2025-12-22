@@ -7,12 +7,11 @@ Business logic for recording and querying token usage.
 import json
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import Any, Optional
-from uuid import UUID
+from typing import Any
 
+import structlog
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-import structlog
 
 from backend.core.pricing import get_pricing_engine
 from backend.models.usage import (
@@ -43,7 +42,7 @@ class UsageService:
     async def record_usage(self, event: UsageEvent) -> TokenUsageRaw:
         """
         Record a token usage event.
-        
+
         Calculates cost and stores the event with full metadata.
         """
         # Calculate cost
@@ -136,7 +135,7 @@ class UsageService:
     ) -> dict[str, dict[str, Any]]:
         """Get usage breakdown by a specific dimension."""
         column = getattr(TokenUsageRaw, group_by)
-        
+
         stmt = select(
             column,
             func.count(TokenUsageRaw.id).label("requests"),
@@ -147,7 +146,7 @@ class UsageService:
         ).group_by(column)
 
         result = await self.session.execute(stmt)
-        
+
         breakdown = {}
         for row in result:
             key = getattr(row, group_by)
@@ -156,14 +155,14 @@ class UsageService:
                 "tokens": row.tokens or 0,
                 "cost": float(row.cost or 0),
             }
-        
+
         return breakdown
 
     async def get_daily_summary(
         self,
         tenant_id: str,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: date | None = None,
+        end_date: date | None = None,
     ) -> DailySummaryResponse:
         """Get daily usage summary for a tenant."""
         if not end_date:
@@ -212,8 +211,8 @@ class UsageService:
     async def get_monthly_summary(
         self,
         tenant_id: str,
-        year: Optional[int] = None,
-        month: Optional[int] = None,
+        year: int | None = None,
+        month: int | None = None,
     ) -> MonthlySummaryResponse:
         """Get monthly usage summary for a tenant."""
         stmt = select(TenantMonthlySummary).where(
@@ -261,8 +260,8 @@ class UsageService:
     async def get_raw_usage(
         self,
         tenant_id: str,
-        start_time: Optional[datetime] = None,
-        end_time: Optional[datetime] = None,
+        start_time: datetime | None = None,
+        end_time: datetime | None = None,
         limit: int = 1000,
         offset: int = 0,
     ) -> list[TokenUsageRaw]:
