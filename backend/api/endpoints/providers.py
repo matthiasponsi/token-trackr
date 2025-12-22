@@ -4,8 +4,8 @@ Provider Endpoints
 API endpoints for provider information and pricing.
 """
 
-from fastapi import APIRouter, HTTPException, status
 import structlog
+from fastapi import APIRouter, HTTPException, status
 
 from backend.core.pricing import get_pricing_engine
 from backend.schemas.usage import ModelPricing, ProviderModelsResponse
@@ -25,7 +25,7 @@ VALID_PROVIDERS = {"bedrock", "azure_openai", "gemini"}
 async def get_provider_models(provider: str) -> ProviderModelsResponse:
     """
     Get available models and their pricing for a provider.
-    
+
     Supported providers:
     - bedrock (AWS Bedrock)
     - azure_openai (Azure OpenAI)
@@ -40,7 +40,7 @@ async def get_provider_models(provider: str) -> ProviderModelsResponse:
     try:
         pricing_engine = get_pricing_engine()
         models = pricing_engine.get_provider_models(provider)
-        
+
         return ProviderModelsResponse(
             provider=provider,
             models=[
@@ -57,7 +57,7 @@ async def get_provider_models(provider: str) -> ProviderModelsResponse:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve provider models",
-        )
+        ) from e
 
 
 @router.post(
@@ -68,7 +68,7 @@ async def get_provider_models(provider: str) -> ProviderModelsResponse:
 async def reload_pricing() -> dict[str, str]:
     """
     Reload pricing configuration from the YAML file.
-    
+
     Useful for updating pricing without restarting the service.
     """
     try:
@@ -80,5 +80,4 @@ async def reload_pricing() -> dict[str, str]:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to reload pricing configuration",
-        )
-
+        ) from e

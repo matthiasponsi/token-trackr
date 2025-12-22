@@ -5,19 +5,16 @@ Pytest fixtures for Token Trackr tests.
 """
 
 import asyncio
+from collections.abc import AsyncGenerator, Generator
 from datetime import datetime
-from decimal import Decimal
-from typing import AsyncGenerator, Generator
-from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from backend.main import app
 from backend.database import get_session
+from backend.main import app
 from backend.models.base import Base
-
 
 # Test database URL (use SQLite for testing)
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -35,12 +32,12 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
 async def test_engine():
     """Create test database engine."""
     engine = create_async_engine(TEST_DATABASE_URL, echo=False)
-    
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    
+
     yield engine
-    
+
     await engine.dispose()
 
 
@@ -52,7 +49,7 @@ async def test_session(test_engine) -> AsyncGenerator[AsyncSession, None]:
         class_=AsyncSession,
         expire_on_commit=False,
     )
-    
+
     async with async_session() as session:
         yield session
         await session.rollback()
@@ -61,15 +58,15 @@ async def test_session(test_engine) -> AsyncGenerator[AsyncSession, None]:
 @pytest.fixture
 def client(test_session) -> Generator[TestClient, None, None]:
     """Create test client with database session override."""
-    
+
     async def override_get_session():
         yield test_session
-    
+
     app.dependency_overrides[get_session] = override_get_session
-    
+
     with TestClient(app) as c:
         yield c
-    
+
     app.dependency_overrides.clear()
 
 
@@ -125,4 +122,3 @@ def sample_batch_events() -> list[dict]:
             "timestamp": datetime.utcnow().isoformat(),
         },
     ]
-

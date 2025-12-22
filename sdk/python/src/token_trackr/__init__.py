@@ -9,8 +9,8 @@ from token_trackr.client import TokenTrackrClient
 from token_trackr.config import TokenTrackrConfig
 from token_trackr.metadata import get_host_metadata
 from token_trackr.wrappers import (
-    BedrockWrapper,
     AzureOpenAIWrapper,
+    BedrockWrapper,
     GeminiWrapper,
 )
 
@@ -24,4 +24,3 @@ __all__ = [
     "GeminiWrapper",
     "get_host_metadata",
 ]
-

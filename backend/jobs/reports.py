@@ -5,14 +5,11 @@ Generate CSV billing reports for tenants.
 """
 
 import csv
-from datetime import date, datetime
-from io import StringIO
+from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 import structlog
+from sqlalchemy import select
 
 from backend.database import get_session_context
 from backend.models.usage import TenantMonthlySummary
@@ -33,16 +30,16 @@ class BillingReportJob:
         self,
         year: int,
         month: int,
-        tenant_id: Optional[str] = None,
+        tenant_id: str | None = None,
     ) -> Path:
         """
         Generate monthly billing report.
-        
+
         Args:
             year: Report year
             month: Report month
             tenant_id: Optional specific tenant (all if None)
-            
+
         Returns:
             Path to generated CSV file
         """
@@ -83,55 +80,61 @@ class BillingReportJob:
             # Write CSV
             with open(output_path, "w", newline="") as f:
                 writer = csv.writer(f)
-                
+
                 # Header
-                writer.writerow([
-                    "Tenant ID",
-                    "Year",
-                    "Month",
-                    "Provider",
-                    "Model",
-                    "Total Requests",
-                    "Prompt Tokens",
-                    "Completion Tokens",
-                    "Total Tokens",
-                    "Total Cost (USD)",
-                ])
+                writer.writerow(
+                    [
+                        "Tenant ID",
+                        "Year",
+                        "Month",
+                        "Provider",
+                        "Model",
+                        "Total Requests",
+                        "Prompt Tokens",
+                        "Completion Tokens",
+                        "Total Tokens",
+                        "Total Cost (USD)",
+                    ]
+                )
 
                 # Data rows
                 for row in rows:
-                    writer.writerow([
-                        row.tenant_id,
-                        row.year,
-                        row.month,
-                        row.provider,
-                        row.model,
-                        row.total_requests,
-                        row.total_prompt_tokens,
-                        row.total_completion_tokens,
-                        row.total_tokens,
-                        f"{row.total_cost:.10f}",
-                    ])
+                    writer.writerow(
+                        [
+                            row.tenant_id,
+                            row.year,
+                            row.month,
+                            row.provider,
+                            row.model,
+                            row.total_requests,
+                            row.total_prompt_tokens,
+                            row.total_completion_tokens,
+                            row.total_tokens,
+                            f"{row.total_cost:.10f}",
+                        ]
+                    )
 
                 # Summary row if multiple tenants
                 if not tenant_id and rows:
                     total_requests = sum(r.total_requests for r in rows)
                     total_tokens = sum(r.total_tokens for r in rows)
                     total_cost = sum(r.total_cost for r in rows)
-                    
+
                     writer.writerow([])
-                    writer.writerow([
-                        "TOTAL",
-                        year,
-                        month,
-                        "-",
-                        "-",
-                        total_requests,
-                        "-",
-                        "-",
-                        total_tokens,
-                        f"{total_cost:.10f}",
-                    ])
+                    writer.writerow(
+                        [
+                            "TOTAL",
+                            year,
+                            month,
+                            "-",
+                            "-",
+                            total_requests,
+                            "-",
+                            "-",
+                            total_tokens,
+                            f"{total_cost:.10f}",
+                        ]
+                    )
 
             logger.info(
                 "Billing report generated",
@@ -164,14 +167,18 @@ class BillingReportJob:
 
             # Filter by date range
             stmt = stmt.where(
-                (TenantMonthlySummary.year > start_year) |
-                ((TenantMonthlySummary.year == start_year) & 
-                 (TenantMonthlySummary.month >= start_month))
+                (TenantMonthlySummary.year > start_year)
+                | (
+                    (TenantMonthlySummary.year == start_year)
+                    & (TenantMonthlySummary.month >= start_month)
+                )
             )
             stmt = stmt.where(
-                (TenantMonthlySummary.year < end_year) |
-                ((TenantMonthlySummary.year == end_year) & 
-                 (TenantMonthlySummary.month <= end_month))
+                (TenantMonthlySummary.year < end_year)
+                | (
+                    (TenantMonthlySummary.year == end_year)
+                    & (TenantMonthlySummary.month <= end_month)
+                )
             )
 
             stmt = stmt.order_by(
@@ -191,27 +198,31 @@ class BillingReportJob:
             # Write CSV
             with open(output_path, "w", newline="") as f:
                 writer = csv.writer(f)
-                
-                writer.writerow([
-                    "Year",
-                    "Month",
-                    "Provider",
-                    "Model",
-                    "Requests",
-                    "Tokens",
-                    "Cost (USD)",
-                ])
+
+                writer.writerow(
+                    [
+                        "Year",
+                        "Month",
+                        "Provider",
+                        "Model",
+                        "Requests",
+                        "Tokens",
+                        "Cost (USD)",
+                    ]
+                )
 
                 for row in rows:
-                    writer.writerow([
-                        row.year,
-                        row.month,
-                        row.provider,
-                        row.model,
-                        row.total_requests,
-                        row.total_tokens,
-                        f"{row.total_cost:.10f}",
-                    ])
+                    writer.writerow(
+                        [
+                            row.year,
+                            row.month,
+                            row.provider,
+                            row.model,
+                            row.total_requests,
+                            row.total_tokens,
+                            f"{row.total_cost:.10f}",
+                        ]
+                    )
 
             logger.info(
                 "Tenant summary report generated",
@@ -219,4 +230,3 @@ class BillingReportJob:
                 records=len(rows),
             )
             return output_path
-

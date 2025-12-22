@@ -4,7 +4,6 @@ API Tests
 Tests for Token Trackr REST API endpoints.
 """
 
-import pytest
 from fastapi.testclient import TestClient
 
 
@@ -28,11 +27,14 @@ class TestUsageEndpoints:
         response = client.post("/usage", json=sample_usage_event)
         assert response.status_code == 201
         data = response.json()
-        
+
         assert data["tenant_id"] == sample_usage_event["tenant_id"]
         assert data["provider"] == sample_usage_event["provider"]
         assert data["model"] == sample_usage_event["model"]
-        assert data["total_tokens"] == sample_usage_event["prompt_tokens"] + sample_usage_event["completion_tokens"]
+        assert (
+            data["total_tokens"]
+            == sample_usage_event["prompt_tokens"] + sample_usage_event["completion_tokens"]
+        )
         assert "calculated_cost" in data
         assert "id" in data
 
@@ -52,7 +54,7 @@ class TestUsageEndpoints:
         response = client.post("/usage/batch", json=sample_batch_events)
         assert response.status_code == 201
         data = response.json()
-        
+
         assert len(data) == len(sample_batch_events)
         for item in data:
             assert "id" in item
@@ -67,7 +69,7 @@ class TestTenantEndpoints:
         response = client.get("/tenant/nonexistent-tenant/summary")
         assert response.status_code == 200
         data = response.json()
-        
+
         assert data["tenant_id"] == "nonexistent-tenant"
         assert data["total_requests"] == 0
         assert data["total_tokens"] == 0
@@ -77,7 +79,7 @@ class TestTenantEndpoints:
         response = client.get("/tenant/test-tenant/daily")
         assert response.status_code == 200
         data = response.json()
-        
+
         assert data["tenant_id"] == "test-tenant"
         assert "items" in data
         assert "start_date" in data
@@ -88,7 +90,7 @@ class TestTenantEndpoints:
         response = client.get("/tenant/test-tenant/monthly")
         assert response.status_code == 200
         data = response.json()
-        
+
         assert data["tenant_id"] == "test-tenant"
         assert "items" in data
 
@@ -101,7 +103,7 @@ class TestProviderEndpoints:
         response = client.get("/provider/bedrock/models")
         assert response.status_code == 200
         data = response.json()
-        
+
         assert data["provider"] == "bedrock"
         assert "models" in data
 
@@ -110,7 +112,7 @@ class TestProviderEndpoints:
         response = client.get("/provider/azure_openai/models")
         assert response.status_code == 200
         data = response.json()
-        
+
         assert data["provider"] == "azure_openai"
 
     def test_get_gemini_models(self, client: TestClient):
@@ -118,11 +120,10 @@ class TestProviderEndpoints:
         response = client.get("/provider/gemini/models")
         assert response.status_code == 200
         data = response.json()
-        
+
         assert data["provider"] == "gemini"
 
     def test_get_invalid_provider(self, client: TestClient):
         """Test getting models for invalid provider."""
         response = client.get("/provider/invalid/models")
         assert response.status_code == 400
-

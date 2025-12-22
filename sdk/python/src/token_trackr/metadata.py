@@ -8,7 +8,6 @@ import os
 import socket
 from dataclasses import dataclass
 from typing import Optional
-import json
 
 import httpx
 
@@ -16,7 +15,7 @@ import httpx
 @dataclass
 class K8sMetadata:
     """Kubernetes metadata."""
-    
+
     pod: Optional[str] = None
     namespace: Optional[str] = None
     node: Optional[str] = None
@@ -25,12 +24,12 @@ class K8sMetadata:
 @dataclass
 class HostMetadata:
     """Host environment metadata."""
-    
+
     hostname: str = ""
     cloud_provider: str = "unknown"
     instance_id: Optional[str] = None
     k8s: Optional[K8sMetadata] = None
-    
+
     def to_dict(self) -> dict:
         """Convert to dictionary for API requests."""
         result = {
@@ -56,7 +55,7 @@ def _get_k8s_metadata() -> Optional[K8sMetadata]:
     """Get Kubernetes metadata from environment."""
     if not _is_running_in_kubernetes():
         return None
-    
+
     return K8sMetadata(
         pod=os.getenv("HOSTNAME") or os.getenv("POD_NAME"),
         namespace=os.getenv("POD_NAMESPACE") or _read_k8s_namespace(),
@@ -83,7 +82,7 @@ def _detect_aws() -> tuple[bool, Optional[str]]:
             timeout=1.0,
         )
         token = token_response.text
-        
+
         instance_response = httpx.get(
             "http://169.254.169.254/latest/meta-data/instance-id",
             headers={"X-aws-ec2-metadata-token": token},
@@ -124,43 +123,42 @@ def _detect_gcp() -> tuple[bool, Optional[str]]:
 def get_host_metadata() -> HostMetadata:
     """
     Collect metadata about the current host environment.
-    
+
     Detects:
     - Hostname
     - Cloud provider (AWS, Azure, GCP, or on-prem)
     - Instance ID (for cloud VMs)
     - Kubernetes metadata (if running in K8s)
-    
+
     Returns:
         HostMetadata object with collected information
     """
     metadata = HostMetadata(
         hostname=socket.gethostname(),
     )
-    
+
     # Check for Kubernetes
     metadata.k8s = _get_k8s_metadata()
-    
+
     # Detect cloud provider
     is_aws, aws_instance = _detect_aws()
     if is_aws:
         metadata.cloud_provider = "aws"
         metadata.instance_id = aws_instance
         return metadata
-    
+
     is_azure, azure_instance = _detect_azure()
     if is_azure:
         metadata.cloud_provider = "azure"
         metadata.instance_id = azure_instance
         return metadata
-    
+
     is_gcp, gcp_instance = _detect_gcp()
     if is_gcp:
         metadata.cloud_provider = "gcp"
         metadata.instance_id = gcp_instance
         return metadata
-    
+
     # On-prem or unknown
     metadata.cloud_provider = "on-prem"
     return metadata
-

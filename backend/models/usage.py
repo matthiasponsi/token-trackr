@@ -6,7 +6,6 @@ Models for tracking token usage, costs, and pricing.
 
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
@@ -49,7 +48,7 @@ class TokenUsageRaw(Base, TimestampMixin):
         default=Decimal("0"),
     )
     timestamp: Mapped[datetime] = mapped_column(nullable=False, index=True)
-    latency_ms: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    latency_ms: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
 
     # Host metadata
     cloud_provider: Mapped[str] = mapped_column(
@@ -57,16 +56,16 @@ class TokenUsageRaw(Base, TimestampMixin):
         nullable=False,
         default="unknown",
     )
-    hostname: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    instance_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    hostname: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    instance_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Kubernetes metadata
-    k8s_pod: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    k8s_namespace: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    k8s_node: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    k8s_pod: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    k8s_namespace: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    k8s_node: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Additional metadata as JSON string
-    metadata_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    metadata_json: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     __table_args__ = (
         Index("idx_usage_tenant_timestamp", "tenant_id", "timestamp"),
@@ -105,12 +104,11 @@ class TenantDailySummary(Base, TimestampMixin):
         nullable=False,
         default=Decimal("0"),
     )
-    avg_latency_ms: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    avg_latency_ms: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
 
     __table_args__ = (
         UniqueConstraint(
-            "tenant_id", "date", "provider", "model", "cloud_provider",
-            name="uq_daily_summary"
+            "tenant_id", "date", "provider", "model", "cloud_provider", name="uq_daily_summary"
         ),
         Index("idx_daily_tenant_date", "tenant_id", "date"),
     )
@@ -148,8 +146,7 @@ class TenantMonthlySummary(Base, TimestampMixin):
 
     __table_args__ = (
         UniqueConstraint(
-            "tenant_id", "year", "month", "provider", "model",
-            name="uq_monthly_summary"
+            "tenant_id", "year", "month", "provider", "model", name="uq_monthly_summary"
         ),
         Index("idx_monthly_tenant_period", "tenant_id", "year", "month"),
     )
@@ -179,14 +176,10 @@ class PricingTable(Base, TimestampMixin):
         nullable=False,
     )
     effective_from: Mapped[date] = mapped_column(Date, nullable=False)
-    effective_to: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    effective_to: Mapped[date | None] = mapped_column(Date, nullable=True)
     is_active: Mapped[bool] = mapped_column(default=True)
 
     __table_args__ = (
-        UniqueConstraint(
-            "provider", "model", "effective_from",
-            name="uq_pricing_model_date"
-        ),
+        UniqueConstraint("provider", "model", "effective_from", name="uq_pricing_model_date"),
         Index("idx_pricing_lookup", "provider", "model", "is_active"),
     )
-

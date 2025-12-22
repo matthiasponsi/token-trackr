@@ -5,11 +5,11 @@ APScheduler-based job scheduler for aggregation and reporting.
 """
 
 import asyncio
-from datetime import date, datetime
+from datetime import date
 
+import structlog
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
-import structlog
 
 from backend.config import settings
 from backend.jobs.aggregation import DailyAggregationJob, MonthlyAggregationJob
@@ -139,4 +139,3 @@ def run() -> None:
 
 if __name__ == "__main__":
     run()
-

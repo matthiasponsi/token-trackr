@@ -6,7 +6,7 @@ Pydantic models for usage tracking API.
 
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
@@ -15,18 +15,18 @@ from pydantic import BaseModel, Field, field_validator
 class K8sMetadata(BaseModel):
     """Kubernetes metadata from the SDK."""
 
-    pod: Optional[str] = None
-    namespace: Optional[str] = None
-    node: Optional[str] = None
+    pod: str | None = None
+    namespace: str | None = None
+    node: str | None = None
 
 
 class HostMetadata(BaseModel):
     """Host metadata from the SDK."""
 
-    hostname: Optional[str] = None
+    hostname: str | None = None
     cloud_provider: str = Field(default="unknown", pattern="^(aws|azure|gcp|on-prem|unknown)$")
-    instance_id: Optional[str] = None
-    k8s: Optional[K8sMetadata] = None
+    instance_id: str | None = None
+    k8s: K8sMetadata | None = None
 
 
 class UsageEvent(BaseModel):
@@ -41,9 +41,9 @@ class UsageEvent(BaseModel):
     prompt_tokens: int = Field(..., ge=0)
     completion_tokens: int = Field(..., ge=0)
     timestamp: datetime
-    latency_ms: Optional[int] = Field(default=None, ge=0)
-    host: Optional[HostMetadata] = None
-    metadata: Optional[dict[str, Any]] = None
+    latency_ms: int | None = Field(default=None, ge=0)
+    host: HostMetadata | None = None
+    metadata: dict[str, Any] | None = None
 
     @field_validator("timestamp", mode="before")
     @classmethod
@@ -80,7 +80,7 @@ class DailyUsageItem(BaseModel):
     total_completion_tokens: int
     total_tokens: int
     total_cost: Decimal
-    avg_latency_ms: Optional[int] = None
+    avg_latency_ms: int | None = None
 
 
 class DailySummaryResponse(BaseModel):
@@ -126,8 +126,8 @@ class TenantSummaryResponse(BaseModel):
     total_completion_tokens: int
     total_tokens: int
     total_cost: Decimal
-    first_usage: Optional[datetime] = None
-    last_usage: Optional[datetime] = None
+    first_usage: datetime | None = None
+    last_usage: datetime | None = None
     by_provider: dict[str, dict[str, Any]]
     by_model: dict[str, dict[str, Any]]
     by_cloud_provider: dict[str, dict[str, Any]]
@@ -146,4 +146,3 @@ class ProviderModelsResponse(BaseModel):
 
     provider: str
     models: list[ModelPricing]
-

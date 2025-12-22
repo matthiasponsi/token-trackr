@@ -9,7 +9,6 @@ import { join } from "path";
 import { homedir } from "os";
 import { TokenTrackrConfig, TokenTrackrOptions } from "./config";
 import {
-  getHostMetadata,
   getHostMetadataSync,
   initHostMetadata,
   HostMetadata,
@@ -170,7 +169,7 @@ export class TokenTrackrClient {
       throw new Error(`HTTP ${response.status}: ${await response.text()}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as UsageResponse | UsageResponse[];
     return Array.isArray(data) ? data : [data];
   }
 

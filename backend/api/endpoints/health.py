@@ -16,14 +16,14 @@ router = APIRouter()
 
 class HealthResponse(BaseModel):
     """Health check response."""
-    
+
     status: str
     version: str
 
 
 class ReadinessResponse(BaseModel):
     """Readiness check response."""
-    
+
     status: str
     database: str
     version: str
@@ -57,4 +57,3 @@ async def readiness_check(
         database=db_status,
         version="1.0.0",
     )
-
