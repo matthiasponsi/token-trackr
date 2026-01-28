@@ -175,12 +175,12 @@ defaults:
   bedrock:
     input_per_1k: 0.002
     output_per_1k: 0.006
-  azure_openai:
-    input_per_1k: 0.002
-    output_per_1k: 0.006
   gemini:
     input_per_1k: 0.001
     output_per_1k: 0.003
+  azure_openai:
+    input_per_1k: 0.002
+    output_per_1k: 0.006
 
 # Override pricing per tenant (optional)
 # tenant_overrides:
